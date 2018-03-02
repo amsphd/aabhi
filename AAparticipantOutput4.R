@@ -4,11 +4,11 @@
 # 
 # RW+AS
 # 10/3/2016
-
+# Updated 3/2/2018
 
 
 # SET WORKING DIRECTORY TO THE DIR CONTAINING THE FISH, QUARTERS, AND CHOOSE FOLDERS!
-#setwd("C:\\Users\\Reed\\Documents\\Class\\Ashes\\10_2016 Analysis")
+setwd("/Users/ashleeshaw/Desktop/AABHI DATA")
 
 # NOTE: THIS VERSION DOES NOT EXPECT PARTICIPANT FOLDERS BUT TASK FOLDERS
 
@@ -102,31 +102,6 @@ for (i in partcodes){
       }
   }
 
-  # #######################
-  # 
-  # 	# Kilroy
-  # 	# Is Kilroy file present? 
-  # 	if(!(any(Kfile))){
-  # 	  # If No: Write NAs, skip on.
-  # 		proberows <- NA
-  # 		err_probe <- NA
-  # 		err_phaseA <- NA
-  # 		err_other <- NA
-  # 	}
-  # 	else{
-  # 	# If Yes: 
-  # 		Kilroy <- read.table(file=paste(".//Kilroy//",Kfiles[Kfile],sep=''), header=TRUE, sep = "\t")
-  # 		probe <- Kilroy[grep("Probe", Kilroy$PHASE), ] 	# which rows are Probe rows
-  # 		phaseA <- Kilroy[grep("Phase A", Kilroy$PHASE), ] 	# which rows are Phase A rows?
-  # 		
-  # 		proberows <- nrow(probe) 	# how many probe rows were there?
-  # 		err_probe <- sum(probe[,ncol(probe)] == 0) 		# how many 0s in the probe rows?
-  # 		err_phaseA <- sum(phaseA[,ncol(phaseA)] == 0) 	# how many 0s in the phaseA rows?
-  # 		err_other <- sum(Kilroy[,ncol(Kilroy)] == 0)	# how many 0s anywhere else?
-  # 		err_other <- err_other - err_probe - err_phaseA
-  # 		#print(c("Kilroy done",i))
-  # 	}
-  
 ###################
   # End info-getting
   
@@ -135,8 +110,7 @@ for (i in partcodes){
   subjn = gsub('R','',i)
   
   # Add this participant's row to the matrix
-  #participants <- rbind(participants,c(i,genscore,learnscore,proberows,err_probe,err_phaseA,err_other,rewCorr,rewOpt,punCorr,punOpt))
-  
+  # participants <- rbind(participants,c(i,genscore,learnscore,proberows,err_probe,err_phaseA,err_other,rewCorr,rewOpt,punCorr,punOpt))
   participants <- rbind(participants,c(as.numeric(subjn),session,genscore,learnscore,rewCorr,rewOpt,punCorr,punOpt,AccAvg,RTAvg))
 } 
 
@@ -144,10 +118,7 @@ colnames(participants) <-c("Participant","Session","F Gen","F Learn","Q RewCorr"
 
 
 #####################
-# Write the whole thing, now!
+# Write the whole thing:
 
-save(participants,file="Y1_PreliminaryExercise.Rdata")
-
-#write.table(participants,"Y1_PreliminaryExercise.txt",sep="\t")
-write.csv(participants,file = "Y1_PreliminaryExercise.csv")
-
+save(participants,file="FCQ_Data.Rdata")
+write.csv(participants,file = "FCQ_Data.csv")
