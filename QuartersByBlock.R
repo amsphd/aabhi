@@ -27,6 +27,8 @@ subjn2 <- sub("[^\\d][^\\d][^\\d][^\\d]","",subjn2)
 attend <- cbind(subjn2,attend[c(1:nrow(attend)),c(2,3)])
 # column 2 is now exerciserness
 
+outtie <- c("Parti","Session","Block","Rew_Corr","Rew_Opt","Pun_Corr","Pun_Opt")
+
 # for the ith participant
 for (i in partcodes){
   ## Figure out who's in slot i and what their files are called if they exist.
@@ -47,26 +49,33 @@ for (i in partcodes){
   # If Yes: 
   else{
     Quarters <- grep("Trial",readLines(paste(".//Quarters//",Qfiles[Qfile],sep=''),warn=FALSE)) # find start of info
-    percents <- scan(paste(".//Quarters//",Qfiles[Qfile],sep=''),"character",skip=Quarters,sep="\n",nlines=160)		# get the info we want!
+    percents <- scan(paste(".//Quarters//",Qfiles[Qfile],sep=''),"character",skip=Quarters-1,sep="\n",nlines=161)		# get the info we want!
     
     if(length(percents)<160){
       # Do nothing
     }
     else{
       csveed = gsub("\t",",",percents)
-      dframe = read.csv(csveed)
+      dframe = read.csv(text=csveed)
+      # Every 32 trials, call it a block and get block level averages. Make a new data frame with that per block average
       d <- split(dframe,rep(1:5,each=32))
-      # test what this outputs!
-
-      for (j in percents){
-        # Every 32 trials, call it a block and get block level averages. Make a new data frame with that per block average
-
-
-        # jtrim = sub("(.*)\t\\d+","\\1",j)
-        # if(length(exercise_control)==0){exercise_control = "X"}
-        # cat(subjn,jtrim,exercise_control,session,'\n',sep="    ",file="QuartersCollection.txt",append=TRUE)
+      # So: Do whatever stats for each block to each slice in d!
+      # reward trial: Positive Win, 0 Loss
+      # punishment trial: Positive Loss, 0 Win
+      # per block: What's the average Correct and average Optimal for Reward and Punishment
+      numba = 0
+      for (bl in d){
+        numba=numba+1
+        Rew_Corr = sum(subset(bl,Win.Amt==25)$Correct.Incorrect)/nrow(subset(bl,Win.Amt==25))
+        Rew_Opt = sum(subset(bl,Win.Amt==25)$Optimal.Not.Optimal)/nrow(subset(bl,Win.Amt==25))
+        Pun_Corr = sum(subset(bl,Lose.Amt==25)$Correct.Incorrect)/nrow(subset(bl,Lose.Amt==25))
+        Pun_Opt = sum(subset(bl,Lose.Amt==25)$Optimal.Not.Optimal)/nrow(subset(bl,Lose.Amt==25))
+        roww = c(subjn,session,numba,Rew_Corr,Rew_Opt,Pun_Corr,Pun_Opt)
+        outtie <- rbind(outtie,roww)
       }
     }
   }
 }
+
+write.csv(outtie,file = "Quarters_by_Block.csv")
 
