@@ -53,6 +53,7 @@ for (i in partcodes){
     
     if(length(percents)<160){
       # Do nothing
+      print("Did not finish; not enough data. Discarding subject ",subjn)
     }
     else{
       csveed = gsub("\t",",",percents)
