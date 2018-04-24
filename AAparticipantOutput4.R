@@ -5,7 +5,7 @@
 # RW+AS
 # 10/3/2016
 # Updated 3/2/2018
-
+# Updated 4/23/2018
 
 # SET WORKING DIRECTORY TO THE DIR CONTAINING THE FISH, QUARTERS, AND CHOOSE FOLDERS!
 setwd("/Users/ashleeshaw/Desktop/AABHI DATA")
@@ -28,88 +28,106 @@ partcodes3 <- sub("Choose32.1_AA(_?)(R?\\d\\d\\d)$","\\2",chofiles,perl=TRUE)
 #partcodes4 <- sub("Kilroy(\\d+\\d?\\.?\\d?\\w?)_(HC4|AAp)(R?\\d\\d\\d)_mod.(txt|csv)","\\3",Kfiles,perl=TRUE)
 
 partcodes <- unique(c(partcodes1,partcodes2,partcodes3))
+nn = 0
 
 # for the ith participant
 for (i in partcodes){
-## Figure out who's in slot i and what their files are called if they exist.
-
-	# i is a partcode in the format (R?\\d\\d\\d)
-	fishfile <- grepl(paste('[^R]',i,sep=''),fishfiles,perl=FALSE)
-	Qfile <- grepl(paste('[^R]',i,sep=''),Qfiles,perl=FALSE)
-  	chofile <- grepl(paste('[^R]',i,sep=''),chofiles,perl=FALSE)
-  	#Kfile <- grepl(i,Kfiles,perl=TRUE)
+  ## Figure out who's in slot i and what their files are called if they exist.
   
-	# Fish
-	# Is Fish file present? 
-	if(!(any(fishfile))){
-	  # If No: Write NAs, skip on.
-	  genscore <- NA
-		learnscore <- NA
-	}
-	else{
-	# If Yes: 
-	  fishfinder <- grep("----- PHASE 0 -----",readLines(paste(".//Fish//",fishfiles[fishfile],sep=''),n=-1,warn=FALSE),value = FALSE) # find start of info
-		fish <- read.table(file=paste(".//Fish//",fishfiles[fishfile],sep=''), header=TRUE, sep = "\t", skip=fishfinder,comment.char="-",blank.lines.skip = TRUE)
-		gen <- fish[grep("\\*", fish[,8]), ] 	# which rows are gen rows?
-		learn <- fish[grep("\\d$", fish[,8]), ] 	# which rows are learn rows?
-		gennum <- sum(gen[,8]=='1*') 	# Number of accurate gen trials 
-		genscore <- gennum/nrow(gen) 	# Avg score on gen (*)  (sum div 1s for * trials)
-		learnscore <- sum(learn[,8]==1)/nrow(learn)
-		#print(c("Fish done",i))
-	}
-
-######################
-	# Quarters
-	# Is Quarters file present?
-	if(!(any(Qfile))){
-	  # If No: Write NAs, skip on.
-		rewCorr <- NA
-		rewOpt <- NA
-		punCorr <- NA
-		punOpt <- NA
-	}
-	# If Yes: 
-	else{
-		Quarters <- grep("Total AB Correct = \\d\\d? \\((\\d\\d?)%",readLines(paste(".//Quarters//",Qfiles[Qfile],sep=''),warn=FALSE)) # find start of info
-		percents <- scan(paste(".//Quarters//",Qfiles[Qfile],sep=''),"character",skip=Quarters-1,sep="\n",nlines=4)		# get the info we want!
-		rewCorr <- sub("Total AB Correct = \\d\\d? \\((\\d\\d?\\d?)\\% correct\\)","\\1", percents[1])	# separate it out
-		rewOpt <- sub("Total AB optimal = \\d\\d? \\((\\d\\d?\\d?)\\% optimal\\)","\\1", percents[3])
-		punCorr <- sub("Total CD Correct = \\d\\d? \\((\\d\\d?\\d?)\\% correct\\)","\\1", percents[2])
-		punOpt <- sub("Total CD optimal = \\d\\d? \\((\\d\\d?\\d?)\\% optimal\\)","\\1", percents[4])
-		#print(c("Quarters done",i))
-	}
+  # i is a partcode in the format (R?\\d\\d\\d)
+  fishfile <- grepl(paste('[^R]',i,sep=''),fishfiles,perl=FALSE)
+  Qfile <- grepl(paste('[^R]',i,sep=''),Qfiles,perl=FALSE)
+  chofile <- grepl(paste('[^R]',i,sep=''),chofiles,perl=FALSE)
+  #Kfile <- grepl(i,Kfiles,perl=TRUE)
   
-########################
+  # Fish
+  # Is Fish file present? 
+  if(!(any(fishfile))){
+    # If No: Write NAs, skip on.
+    genscore <- NA
+    learnscore <- NA
+  }
+  else{
+    # If Yes: 
+    fishfinder <- grep("----- PHASE 0 -----",readLines(paste(".//Fish//",fishfiles[fishfile],sep=''),n=-1,warn=FALSE),value = FALSE) # find start of info
+    fish <- read.table(file=paste(".//Fish//",fishfiles[fishfile],sep=''), header=TRUE, sep = "\t", skip=fishfinder,comment.char="-",blank.lines.skip = TRUE)
+    gen <- fish[grep("\\*", fish[,8]), ] 	# which rows are gen rows?
+    learn <- fish[grep("\\d$", fish[,8]), ] 	# which rows are learn rows?
+    gennum <- sum(gen[,8]=='1*') 	# Number of accurate gen trials 
+    genscore <- gennum/nrow(gen) 	# Avg score on gen (*)  (sum div 1s for * trials)
+    learnscore <- sum(learn[,8]==1)/nrow(learn)
+    #print(c("Fish done",i))
+  }
+  
+  ######################
+  # Quarters
+  # Is Quarters file present?
+  if(!(any(Qfile))){
+    # If No: Write NAs, skip on.
+    rewCorr <- NA
+    rewOpt <- NA
+    punCorr <- NA
+    punOpt <- NA
+  }
+  # If Yes: 
+  else{
+    Quarters <- grep("Total AB Correct = \\d\\d? \\((\\d\\d?)%",readLines(paste(".//Quarters//",Qfiles[Qfile],sep=''),warn=FALSE)) # find start of info
+    if (length(Quarters)==0){
+      rewCorr <- NA
+      rewOpt <- NA
+      punCorr <- NA
+      punOpt <- NA
+    }
+    else{
+      percents <- scan(paste(".//Quarters//",Qfiles[Qfile],sep=''),"character",skip=Quarters-1,sep="\n",nlines=4)		# get the info we want!
+      rewCorr <- sub("Total AB Correct = \\d\\d? \\((\\d\\d?\\d?)\\% correct\\)","\\1", percents[1])	# separate it out
+      rewOpt <- sub("Total AB optimal = \\d\\d? \\((\\d\\d?\\d?)\\% optimal\\)","\\1", percents[3])
+      punCorr <- sub("Total CD Correct = \\d\\d? \\((\\d\\d?\\d?)\\% correct\\)","\\1", percents[2])
+      punOpt <- sub("Total CD optimal = \\d\\d? \\((\\d\\d?\\d?)\\% optimal\\)","\\1", percents[4])
+      #print(c("Quarters done",i))
+    }
+  }
+  
+  ########################
   # Choose32
   # Is Choose file present?
   if(!(any(chofile))){
     # If No: Write NAs, skip on.
-      TAccAvg <- NA
-      TRTAvg <- NA
-      TnErr <- NA
-      PAccAvg <- NA
-      PRTAvg <- NA
-      PnErr <- NA
+    TAccAvg <- NA
+    TRTAvg <- NA
+    TnErr <- NA
+    PAccAvg <- NA
+    PRTAvg <- NA
+    PnErr <- NA
   }
   # If Yes: 
   else{
+    task <- grep("Task: (p|P)",readLines(paste(".//Choose//",chofiles[chofile],sep=''),n=-1,warn=FALSE),value = FALSE) # find start of info)
     training <- grep("------- TRAINING -------",readLines(paste(".//Choose//",chofiles[chofile],sep=''),n=-1,warn=FALSE),value = FALSE) # find start of info
-  	probe <- grep("------- PROBE -------",readLines(paste(".//Choose//",chofiles[chofile],sep=''),n=-1,warn=FALSE),value = FALSE) # find start of info
-  	ltrain <- probe-training
-
-    if (length(training)>0){
-      # Necessary because at least one subject (84) was run on the wrong "task" of Choose (R vs. P)
-      chodata <- read.table(paste(".//Choose//",chofiles[chofile],sep=''),header = TRUE, sep = "\t",skip=training,nrows=ltrain)		# get the info we want!
-      TAccAvg <- sum(chodata[,6]==1)/sum(chodata[,1]!=0)
-      TRTAvg <- sum(chodata[chodata[,6]==1,7])/sum(chodata[,6]==1)
-      TnErr <- sum(chodata[,6]==0) 
-
-    if (length(probe)>0){
-      # Necessary because at least one subject (84) was run on the wrong "task" of Choose (R vs. P)
-      chodata <- read.table(paste(".//Choose//",chofiles[chofile],sep=''),header = TRUE, sep = "\t",skip=probe)		# get the info we want!
-      PAccAvg <- sum(chodata[,6]==1)/sum(chodata[,1]!=0)
-      PRTAvg <- sum(chodata[chodata[,6]==1,7])/sum(chodata[,6]==1)
-      PnErr <- sum(chodata[,6]==0) 
+    probe <- grep("------- PROBE -------",readLines(paste(".//Choose//",chofiles[chofile],sep=''),n=-1,warn=FALSE),value = FALSE) # find start of info
+    ltrain <- probe-training-3
+    if (length(probe)==0){
+      ltrain = -1 # means use all the lines
+    }
+    
+    if (length(task)>0){
+      if (length(training)>0){
+        # Necessary because at least one subject (84) was run on the wrong "task" of Choose (R vs. P)
+        chodata <- read.table(paste(".//Choose//",chofiles[chofile],sep=''),header = TRUE, sep = "\t",skip=training,nrows=ltrain)		# get the info we want!
+        print(ncol(chodata))
+        TAccAvg <- sum(chodata[,6]==1)/sum(chodata[,1]!=0)
+        TRTAvg <- sum(chodata[chodata[,6]==1,7])/sum(chodata[,6]==1)
+        TnErr <- sum(chodata[,6]==0) 
+      }
+      
+      if (length(probe)>0){
+        # Necessary because at least one subject (84) was run on the wrong "task" of Choose (R vs. P)
+        chodata2 <- read.table(paste(".//Choose//",chofiles[chofile],sep=''),header = TRUE, sep = "\t",skip=probe)		# get the info we want!
+        print(ncol(chodata2))
+        PAccAvg <- sum(chodata2[,6]==1)/sum(chodata2[,1]!=0)
+        PRTAvg <- sum(chodata2[chodata2[,6]==1,7])/sum(chodata2[,6]==1)
+        PnErr <- sum(chodata2[,6]==0) 
+      }
     }
     else{
       TAccAvg <- NA
@@ -118,10 +136,10 @@ for (i in partcodes){
       PAccAvg <- NA
       PRTAvg <- NA
       PnErr <- NA
-      }
+    }
   }
-
-###################
+  
+  ###################
   # End info-getting
   
   # is this participant a retest? 
@@ -130,10 +148,13 @@ for (i in partcodes){
   
   # Add this participant's row to the matrix
   # participants <- rbind(participants,c(i,genscore,learnscore,proberows,err_probe,err_phaseA,err_other,rewCorr,rewOpt,punCorr,punOpt))
-  participants <- rbind(participants,c(as.numeric(subjn),session,genscore,learnscore,rewCorr,rewOpt,punCorr,punOpt,AccAvg,RTAvg))
+  participants <- rbind(participants,c(as.numeric(subjn),session,genscore,learnscore,rewCorr,rewOpt,punCorr,punOpt,TAccAvg,TRTAvg,TnErr,PAccAvg,PRTAvg,PnErr))
+  print(paste("Participant ",i," run!"))
+  nn = nn+1
+  print(paste("Total ",nn," out of ",length(partcodes)," participants run."))
 } 
 
-colnames(participants) <-c("Participant","Session","F Gen","F Learn","Q RewCorr","Q RewOpt","Q PunCorr","Q PunOpt","Choose AccAvg","Choose RTAvg")
+colnames(participants) <-c("Participant","Session","F Gen","F Learn","Q RewCorr","Q RewOpt","Q PunCorr","Q PunOpt","Choose Training AccAvg","Choose Training RTAvg","Choose Training nErr","Choose Probe AccAvg","Choose Probe RTAvg","Choose Probe nErr")
 
 
 #####################
