@@ -27,7 +27,7 @@ subjn2 <- sub("[^\\d][^\\d][^\\d][^\\d]","",subjn2)
 attend <- cbind(subjn2,attend[c(1:nrow(attend)),c(2,3)])
 # column 2 is now exerciserness
 
-outtie <- c("Parti","Session","Block","Rew_Corr","Rew_Opt","Pun_Corr","Pun_Opt")
+outtie <- c("Sbj","Session","Block","Rew_Corr","Rew_Opt","Pun_Corr","Pun_Opt")
 
 # for the ith participant
 for (i in partcodes){
@@ -53,7 +53,8 @@ for (i in partcodes){
     
     if(length(percents)<160){
       # Do nothing
-      print("Did not finish; not enough data. Discarding subject ",subjn)
+      print("Did not finish; not enough data. Discarding subject ")
+      print(subjn)
     }
     else{
       csveed = gsub("\t",",",percents)
@@ -80,3 +81,23 @@ for (i in partcodes){
 
 write.csv(outtie,file = "Quarters_by_Block.csv")
 
+QbBTable<- data.frame(outtie[c(2:nrow(outtie)),c(1:ncol(outtie))])
+colnames(QbBTable)<-outtie[1,c(1:7)]
+#View(QbBTable)
+
+Keepers= c(125, 128, 129, 134, 135, 139, 140, 141, 146, 147, 148, 149, 151, 152, 154, 155, 158, 160, 163, 168, 172, 173, 174, 176, 177, 178, 179, 182, 183, 187, 188, 189, 190, 194, 197, 200, 201, 212, 216, 217, 219, 220, 221, 222, 223, 224, 225, 227, 232, 233, 234, 236, 238, 239, 241, 244, 246, 248, 250, 251, 254, 255, 258, 259, 261, 267, 273, 277, 280, 288, 292, 298)
+QbBPrePost<- subset(QbBTable, Sbj %in% Keepers)
+QbBPrePost$Rew_Corr<-as.numeric(levels(QbBPrePost$Rew_Corr)[QbBPrePost$Rew_Corr])
+QbBPrePost$Rew_Opt<-as.numeric(levels(QbBPrePost$Rew_Opt)[QbBPrePost$Rew_Opt])
+QbBPrePost$Pun_Corr<-as.numeric(levels(QbBPrePost$Pun_Corr)[QbBPrePost$Pun_Corr])
+QbBPrePost$Pun_Opt<-as.numeric(levels(QbBPrePost$Pun_Opt)[QbBPrePost$Pun_Opt])
+
+#QbBPrePostLong <- melt(QbBPrePost,id.vars = c("Ss","Session","Block"))
+#QbBPrePostWide <- dcast(QbBPrePostLong, Ss + Session ~ Block + variable)
+# Combine these using recast:
+QbBPrePostWide <- recast(QbBPrePost,id.var = c("Sbj","Session","Block"), formula=Sbj+Session~Block+variable)
+
+#data, referenced below, is The Data-- i.e., the master file I do analyses from. Brought in from Participant Output files, correlation files, hand-making from healthy aging file, etc.
+merged <- merge(data,QbBPrePostWide,by=c("Sbj","Session"))
+
+write.csv(merged,file = "March2018PrePost_QbB.csv")
