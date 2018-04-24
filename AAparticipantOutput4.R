@@ -36,8 +36,8 @@ for (i in partcodes){
 	# i is a partcode in the format (R?\\d\\d\\d)
 	fishfile <- grepl(paste('[^R]',i,sep=''),fishfiles,perl=FALSE)
 	Qfile <- grepl(paste('[^R]',i,sep=''),Qfiles,perl=FALSE)
-  chofile <- grepl(paste('[^R]',i,sep=''),chofiles,perl=FALSE)
-  #Kfile <- grepl(i,Kfiles,perl=TRUE)
+  	chofile <- grepl(paste('[^R]',i,sep=''),chofiles,perl=FALSE)
+  	#Kfile <- grepl(i,Kfiles,perl=TRUE)
   
 	# Fish
 	# Is Fish file present? 
@@ -84,21 +84,40 @@ for (i in partcodes){
   # Is Choose file present?
   if(!(any(chofile))){
     # If No: Write NAs, skip on.
-    AccAvg <- NA
-    RTAvg <- NA
+      TAccAvg <- NA
+      TRTAvg <- NA
+      TnErr <- NA
+      PAccAvg <- NA
+      PRTAvg <- NA
+      PnErr <- NA
   }
   # If Yes: 
   else{
-    probe <- grep("------- PROBE -------",readLines(paste(".//Choose//",chofiles[chofile],sep=''),n=-1,warn=FALSE),value = FALSE) # find start of info
+    training <- grep("------- TRAINING -------",readLines(paste(".//Choose//",chofiles[chofile],sep=''),n=-1,warn=FALSE),value = FALSE) # find start of info
+  	probe <- grep("------- PROBE -------",readLines(paste(".//Choose//",chofiles[chofile],sep=''),n=-1,warn=FALSE),value = FALSE) # find start of info
+  	ltrain <- probe-training
+
+    if (length(training)>0){
+      # Necessary because at least one subject (84) was run on the wrong "task" of Choose (R vs. P)
+      chodata <- read.table(paste(".//Choose//",chofiles[chofile],sep=''),header = TRUE, sep = "\t",skip=training,nrows=ltrain)		# get the info we want!
+      TAccAvg <- sum(chodata[,6]==1)/sum(chodata[,1]!=0)
+      TRTAvg <- sum(chodata[chodata[,6]==1,7])/sum(chodata[,6]==1)
+      TnErr <- sum(chodata[,6]==0) 
+
     if (length(probe)>0){
       # Necessary because at least one subject (84) was run on the wrong "task" of Choose (R vs. P)
       chodata <- read.table(paste(".//Choose//",chofiles[chofile],sep=''),header = TRUE, sep = "\t",skip=probe)		# get the info we want!
-      AccAvg <- sum(chodata[,6]==1)/sum(chodata[,1]!=0)
-      RTAvg <- sum(chodata[chodata[,6]==1,7])/sum(chodata[,6]==1)
+      PAccAvg <- sum(chodata[,6]==1)/sum(chodata[,1]!=0)
+      PRTAvg <- sum(chodata[chodata[,6]==1,7])/sum(chodata[,6]==1)
+      PnErr <- sum(chodata[,6]==0) 
     }
     else{
-      AccAvg <- NA
-      RTAvg <- NA
+      TAccAvg <- NA
+      TRTAvg <- NA
+      TnErr <- NA
+      PAccAvg <- NA
+      PRTAvg <- NA
+      PnErr <- NA
       }
   }
 
@@ -122,3 +141,5 @@ colnames(participants) <-c("Participant","Session","F Gen","F Learn","Q RewCorr"
 
 save(participants,file="FCQ_Data.Rdata")
 write.csv(participants,file = "FCQ_Data.csv")
+
+
