@@ -16,15 +16,15 @@ setwd("/Users/ashleeshaw/Desktop/AABHI DATA")
 participants <- c()
 
 # run this code from one folder up from the root of the Tasks folders
-fishfiles <- list.files(path="./Fish", pattern="Fish8.1(a|b)_AA(_?)(R?)(\\d\\d\\d)$", full.names=F, recursive=FALSE)
-Qfiles <- list.files(path="./Quarters", pattern="QuartersFortune1.4(a|b)_AA(_?)(R?)(\\d\\d\\d)$", full.names=F, recursive=FALSE)
-chofiles <- list.files(path="./Choose", pattern="Choose32.1_AA(_?)(R?)(\\d\\d\\d)$", full.names=F, recursive=FALSE)
+fishfiles <- list.files(path="./Fish", pattern="Fish8.1(a|b)_AA(_?)(R?)(\\d\\d\\d)(_?)(Q?)$", full.names=F, recursive=FALSE)
+Qfiles <- list.files(path="./Quarters", pattern="QuartersFortune1.4(a|b)_AA(_?)(R?)(\\d\\d\\d)(_?)(Q?)$", full.names=F, recursive=FALSE)
+chofiles <- list.files(path="./Choose", pattern="Choose32.1_AA(_?)(R?)(\\d\\d\\d)(_?)(Q?)$", full.names=F, recursive=FALSE)
 #Kfiles <- list.files(path="./Kilroy", pattern="Kilroy(\\d+\\d?\\.?\\d?\\w?)_(HC4|AAp)(R?\\d\\d\\d)_mod.(txt|csv)", full.names=F, recursive=FALSE)
 
 # this extracts the participants codes!
-partcodes1 <- sub("Fish8.1(a|b)_AA(_?)(R?\\d\\d\\d)$","\\3",fishfiles,perl=TRUE)
-partcodes2 <- sub("QuartersFortune1.4(a|b)_AA(_?)(R?\\d\\d\\d)$","\\3",Qfiles,perl=TRUE)
-partcodes3 <- sub("Choose32.1_AA(_?)(R?\\d\\d\\d)$","\\2",chofiles,perl=TRUE)
+partcodes1 <- sub("Fish8.1(a|b)_AA(_?)(R?\\d\\d\\d)(_?)(Q?)$","\\3",fishfiles,perl=TRUE)
+partcodes2 <- sub("QuartersFortune1.4(a|b)_AA(_?)(R?\\d\\d\\d)(_?)(Q?)$","\\3",Qfiles,perl=TRUE)
+partcodes3 <- sub("Choose32.1_AA(_?)(R?\\d\\d\\d)(_?)(Q?)$","\\2",chofiles,perl=TRUE)
 #partcodes4 <- sub("Kilroy(\\d+\\d?\\.?\\d?\\w?)_(HC4|AAp)(R?\\d\\d\\d)_mod.(txt|csv)","\\3",Kfiles,perl=TRUE)
 
 partcodes <- unique(c(partcodes1,partcodes2,partcodes3))
@@ -160,7 +160,55 @@ colnames(participants) <-c("Participant","Session","F Gen","F Learn","Q RewCorr"
 #####################
 # Write the whole thing:
 
-save(participants,file="FCQ_Data.Rdata")
-write.csv(participants,file = "FCQ_Data.csv")
+save(participants,file=paste("FCQ_Data_",format(Sys.Date(), '%Y_%m_%d'),".Rdata",sep = ""))
+write.csv(participants,file=paste("FCQ_Data_",format(Sys.Date(), '%Y_%m_%d'),"csv",sep = ""))
+
+
+## NOW WITH OPTIONAL GENETIC DATA!
+library(reshape2)
+paf = data.frame(participants)
+
+geneticsdata<- read.csv(file="Genetics_2018_04_23_test.csv")
+
+##Looking at data to see what we've got, and how these factors are coming out.
+summary(geneticsdata)
+genD = geneticsdata[c(1,2,9,10,12,13,14)]
+colnames(genD)[colnames(genD)=="Subject"] <-"Participant"
+summary(genD)
+gataca = c("GG", "GA", "GC", "GT", "CC", "CA", "CG", "CT", "AA", "AC", "AG", "AT", "TT", "TA", "TC", "TG")
+genD[,2] <- factor (as.character(genD[,2]), levels=gataca)
+genD[,3] <- factor (as.character(genD[,3]), levels=gataca)
+genD[,4] <- factor (as.character(genD[,4]), levels=gataca)
+genD[,5] <- factor (as.character(genD[,5]), levels=gataca)
+genD[,6] <- factor (as.character(genD[,6]), levels=gataca)
+genD[,7] <- factor (as.character(genD[,7]), levels=gataca)
+summary(genD)
+genD[,8] <- 1
+colnames(genD)[8] <- "Session"
+genD[,1] <- gsub("AA(\\d+)", "\\1", genD[,1])
+genD[,1] <- as.factor(as.numeric(genD[,1]))
+genD = genD[!is.na(genD[,1]),]
+genD[,8] <- factor(genD[,8], levels = c("1","2"))
+
+lvls = unique(c(levels(genD[,1]),levels(paf[,1])))
+genD[,1] <- factor (as.character(genD[,1]), levels=lvls)
+genDmelt <- melt(genD,id=c("Participant", "Session"))
+#genD[,8] <- 2
+#genDmelt2 <- melt(genD,id=c("Participant", "Session"))
+
+lvls = unique(c(levels(genD[,1]),levels(paf[,1])))
+paf[,1] <- factor (as.character(paf[,1]), levels=lvls)
+pmelt <- melt(paf, id.vars = c("Participant", "Session"), factorsAsStrings=T)
+
+varlevels = unique(c(levels(pmelt$variable),levels(genDmelt$variable)))
+pmelt$variable <- factor(as.character(pmelt$variable), levels = varlevels)
+genDmelt$variable <- factor(as.character(genDmelt$variable), levels = varlevels)
+
+#participants_genD = rbind(pmelt, genDmelt, genDmelt2)
+participants_genD = rbind(pmelt, genDmelt)
+part_genD_wide = reshape(participants_genD, idvar = c("Participant", "Session"), timevar = "variable", direction = "wide")
+
+save(part_genD_wide,file=paste("FCQ_and_Genetics_Data_",format(Sys.Date(), '%Y_%m_%d'),".Rdata",sep = ""))
+write.csv(part_genD_wide,file = paste("FCQ_and_Genetics_Data_",format(Sys.Date(), '%Y_%m_%d'),".csv",sep = ""),na="")
 
 

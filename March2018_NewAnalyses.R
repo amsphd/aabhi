@@ -1,4 +1,6 @@
-# names(merged)
+merged <- read.csv("March2018PrePost_QbB.csv")
+
+names(merged)
 # [1] "Sbj"                                              "Session"                                         
 # [3] "SbjNum"                                           "MMSE"                                            
 # [5] "BDI_Total"                                        "Social_Total"                                    
@@ -363,3 +365,24 @@ summary(TUG_ExInt_T2.lm)
 pdf("Mar2018_TUGvsExIntT2.pdf",height=7,width=8)
 my.pairscor(merged_T2[,c(55,77)])
 dev.off()
+
+
+V02_ExInt_T1.lm = lm(merged_T1$VO2 ~ merged_T1$ExInt)
+summary(V02_ExInt_T1.lm)
+V02_ExInt_T2.lm = lm(merged_T2$VO2 ~ merged_T2$ExInt)
+summary(V02_ExInt_T2.lm)
+
+
+BDI_ExInt_T1.lm = lm(merged_T1$BDI_Total ~ merged_T1$ExInt)
+summary(BDI_ExInt_T1.lm)
+BDI_ExInt_T2.lm = lm(merged_T2$BDI_Total ~ merged_T2$ExInt)
+summary(BDI_ExInt_T2.lm)
+
+BMI_ExInt_T1.lm = lm(merged_T1$BMI ~ merged_T1$ExInt)
+summary(BMI_ExInt_T1.lm)
+BMI_ExInt_T2.lm = lm(merged_T2$BMI ~ merged_T2$ExInt)
+summary(BMI_ExInt_T2.lm)
+
+
+VO2_ExInt_T2.lm = lm(merged_T2$TUG ~ merged_T2$ExInt)
+summary(TUG_ExInt_T2.lm)
